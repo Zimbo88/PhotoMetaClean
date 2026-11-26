@@ -2,9 +2,9 @@
 
 [Deutsch](README.md) · **English**
 
-A night photograph is still a photograph when AI helped reduce the noise. A client who sees an “AI” label under the picture may reasonably wonder whether the whole scene was generated. I’m sharing PhotoMetaClean to help photographers I know explain that distinction to their clients.
+PhotoMetaClean checks photos for known AI metadata, including records saved by Adobe Lightroom. You can see what the file says about how the photo was taken and edited, and remove supported entries from a copy. The free app runs locally on Windows, macOS and Linux without an account or a photo upload. [Download the app](https://github.com/Zimbo88/PhotoMetaClean/releases/latest) · [Startup guide](docs/START.md#english)
 
-PhotoMetaClean shows what an image file records about its origin and editing history. You can inspect known AI entries and remove supported records from a copy. The app runs on your computer without an account or a photo upload. It’s free for Windows, macOS and Linux. [Download the app](https://github.com/Zimbo88/PhotoMetaClean/releases/latest) · [Startup guide](docs/START.md#english)
+A night photograph is still a photograph when AI helped reduce the noise. A client who sees an “AI” label under the picture may reasonably wonder whether the whole scene was generated. I’m sharing PhotoMetaClean to help photographers I know explain that distinction to their clients.
 
 ## Prepare a folder for a client
 

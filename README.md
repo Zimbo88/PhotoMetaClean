@@ -2,9 +2,9 @@
 
 **Deutsch** · [English](README_EN.md)
 
-Eine Nachtaufnahme bleibt eine Fotografie, auch wenn beim Entrauschen KI geholfen hat. Wer später nur das Wort „KI“ unter dem Bild sieht, kann leicht den Eindruck bekommen, das ganze Motiv sei künstlich erzeugt. Ich veröffentliche PhotoMetaClean, weil ich Fotografen in meinem Umfeld dabei helfen möchte, ihren Kunden solche Unterschiede zu erklären.
+PhotoMetaClean prüft Fotos auf bekannte KI-Metadaten, etwa nach einer Bearbeitung in Adobe Lightroom. Du siehst, welche Angaben zur Aufnahme und Bearbeitung in der Bilddatei stehen, und kannst unterstützte Einträge aus einer Kopie entfernen. Die kostenlose App läuft auf deinem Rechner unter Windows, macOS oder Linux, ohne Konto und ohne Foto-Upload. [App herunterladen](https://github.com/Zimbo88/PhotoMetaClean/releases/latest) · [Hilfe beim Start](docs/START.md)
 
-PhotoMetaClean zeigt dir, welche Angaben zur Entstehung und Bearbeitung in deiner Bilddatei stehen. Du kannst bekannte KI-Einträge prüfen und unterstützte Angaben aus einer Kopie entfernen. Die App arbeitet auf deinem Rechner, ohne Konto und ohne Foto-Upload. Sie ist für Windows, macOS und Linux kostenlos erhältlich. [App herunterladen](https://github.com/Zimbo88/PhotoMetaClean/releases/latest) · [Hilfe beim Start](docs/START.md)
+Eine Nachtaufnahme bleibt eine Fotografie, auch wenn beim Entrauschen KI geholfen hat. Wer später nur das Wort „KI“ unter dem Bild sieht, kann leicht den Eindruck bekommen, das ganze Motiv sei künstlich erzeugt. Ich veröffentliche PhotoMetaClean, weil ich Fotografen in meinem Umfeld dabei helfen möchte, ihren Kunden solche Unterschiede zu erklären.
 
 ## Einen Kundenordner vorbereiten
 
