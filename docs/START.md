@@ -1,4 +1,4 @@
-# PhotoMetaClean 0.9.0
+# PhotoMetaClean 0.9.1
 
 ## Deutsch
 

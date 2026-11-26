@@ -167,9 +167,11 @@ def credential_segments(data, parts):
     return selected
 
 
-def jpeg_changes(data, privacy=(), *, clean_exif=False, clean_ai=True, history=False):
+def jpeg_changes(data, privacy=(), *, clean_exif=False, clean_ai=True, history=False, has_provenance=False):
     """Return independent (start, end, replacement, description) metadata ranges."""
     primary, *aux = image_streams(data, allow_provenance=clean_ai)
+    if primary.fixed_layout and has_provenance:
+        raise ValueError("Mobile HDR provenance requires review")
     if aux and any(s.marker == 0xeb for s in aux[0].parts):
         raise ValueError("Auxiliary image has independent provenance")
     changes = []
@@ -210,6 +212,8 @@ def jpeg_changes(data, privacy=(), *, clean_exif=False, clean_ai=True, history=F
         main = masters[0]
         pos=main.payload+len(XMP)
         raw=data[pos:main.end]
+        if primary.fixed_layout:
+            locations(raw, ())
         updated, names=clean_packet(raw, clean_ai=clean_ai, history=history)
         selected = set(privacy) - {"JPEG:Comment"}
         if selected:
@@ -231,6 +235,8 @@ def jpeg_changes(data, privacy=(), *, clean_exif=False, clean_ai=True, history=F
             if (len(packet)!=total or hashlib.md5(packet, usedforsecurity=False).hexdigest().upper().encode()!=guid.upper()
                     or raw.upper().count(guid.upper())!=1):
                 raise ValueError("Extended XMP reference or digest mismatch")
+            if primary.fixed_layout:
+                locations(bytes(packet), ())
             cleaned, fields=clean_packet(bytes(packet), clean_ai=clean_ai, history=history)
             if fields:
                 new_guid=hashlib.md5(cleaned, usedforsecurity=False).hexdigest().upper().encode()
@@ -241,6 +247,9 @@ def jpeg_changes(data, privacy=(), *, clean_exif=False, clean_ai=True, history=F
                                     "Extended XMP · "+", ".join(fields)))
         if updated!=raw:
             changes.append((pos, main.end, updated,"XMP · "+", ".join(names)))
+    if primary.fixed_layout and any(end - start != len(value) or end > primary.end
+                                    for start, end, value, _ in changes):
+        raise ValueError("Mobile HDR export requires fixed image positions")
     return sorted(changes)
 
 

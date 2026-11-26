@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, QSettings, QTimer, QLocale, QUrl, QStandardPaths
 from PySide6.QtGui import QGuiApplication, QDesktopServices, QIcon
 
 from photometaclean import __version__
+from photometaclean.core.edit import IPTC_DIGEST_WARNING
 from photometaclean.core.publish import publish_new
 from photometaclean.core.options import edit_options, has_generated_label
 from photometaclean.core.review import FIELDS, destination_path
@@ -58,6 +59,9 @@ ICON = Path(__file__).with_name("photometaclean.svg")
 REASONS = {
     "Existing provenance protects this history / Herkunftsnachweis schützt diesen Verlauf":
         ("A provenance record protects this editing history", "Ein Herkunftsnachweis schützt diesen Bearbeitungsverlauf"),
+    "The detected record has no supported lossless export":
+        ("Record found. This entry cannot be removed with a verified edit.",
+         "Eintrag erkannt. Für diesen Eintrag gibt es keine geprüfte Korrektur."),
     "provenance": ("Origin record found · double-click to inspect", "Herkunftseintrag gefunden · Doppelklick zeigt den Inhalt"),
     "format": ("This file type can only be copied", "Diesen Dateityp kann die App nur kopieren"),
     "unverified": ("Could not verify this picture", "Dieses Bild ließ sich nicht sicher prüfen"),
@@ -368,6 +372,8 @@ class Window(W.QMainWindow):
         layout.addWidget(W.QLabel(f"<h2>PhotoMetaClean {__version__}</h2>"))
         for text in (self.t("Inspect photo metadata locally and save verified, edited copies.",
                             "Bildmetadaten lokal untersuchen und geprüfte Kopien speichern."),
+                     self.t("The app checks known metadata entries. Watermarks in the pixels are outside this check. A platform can still label the photo as AI.",
+                            "Die App prüft bekannte Metadateneinträge. Wasserzeichen in den Bildpunkten erfasst sie dabei nicht. Eine Plattform kann das Foto weiterhin als KI kennzeichnen."),
                      self.t("Free for private and commercial use. The license prohibits selling the software.",
                             "Kostenlos für private und gewerbliche Nutzung. Die Lizenz untersagt den Verkauf der Software."),
                      "© 2026 Mathias Zimmermann"):
@@ -448,8 +454,8 @@ class Window(W.QMainWindow):
         if self.camera_patch.isChecked():
             self.patch_button.setText(self.t("Clean copies", "Kopien bereinigen"))
             message = self.t(
-                "JPEG export removes supported AI records and embedded credentials from the copy. The original and a private recovery record preserve them. Use only where you have the rights. Adobe prohibits removing Content Credentials under its generative AI terms.",
-                "Der JPEG-Export entfernt unterstützte KI-Angaben und eingebettete Nachweise aus der Kopie. Original und privates Sicherungsprotokoll bewahren sie auf. Nur bei entsprechender Berechtigung nutzen. Adobe untersagt das Entfernen von Content Credentials in seinen Bedingungen für generative KI.")
+                "This option can remove AI entries and signed credentials from JPEG copies. An unfamiliar HDR layout can leave an entry in the copy. Check the Result column. Adobe’s generative AI terms prohibit removing Content Credentials.",
+                "Diese Option kann KI-Einträge und signierte Nachweise aus JPEG-Kopien entfernen. Bei unbekanntem HDR-Aufbau kann ein Eintrag erhalten bleiben. Den Grund zeigt die Spalte Ergebnis. Adobes Bedingungen für generative KI untersagen das Entfernen von Content Credentials.")
         else:
             self.patch_button.setText(self.t("Patch folder", "Ordner patchen"))
             message = self.t("Source labels are kept.", "Angaben zur Bildherkunft bleiben erhalten.")
@@ -891,6 +897,10 @@ class Window(W.QMainWindow):
                                           for change in d["audit"]["changes"]))
             action = self.t("Removed ", "Entfernt: ") + ", ".join(removed)
             status = self.t(*POSTCHECK[postcheck["state"]]) if postcheck else self.t("Corrected copy saved", "Korrigierte Kopie gespeichert")
+            if (d["audit"].get("existing_warning") == IPTC_DIGEST_WARNING
+                    and postcheck and postcheck["issue"] == IPTC_DIGEST_WARNING):
+                status = self.t("AI source label removed. Check the existing IPTC warning.",
+                                "KI-Quellenangabe entfernt. Frühere IPTC-Warnung bitte prüfen.")
             if d.get("retained_fields"):
                 kept = ", ".join(self.t(*FIELD_LABELS[key]) for key in d["retained_fields"])
                 status += self.t(" · Kept for review: ", " · Zur Prüfung erhalten: ") + kept
@@ -944,6 +954,16 @@ class Window(W.QMainWindow):
             self.table.setItem(n,i,item)
 
     def copy_reason(self, reason):
+        if reason and IPTC_DIGEST_WARNING in reason:
+            return self.t("IPTC and XMP may disagree. Check both sets of metadata in the original.",
+                          "IPTC und XMP stimmen möglicherweise nicht überein. Bitte die Angaben im Original prüfen.")
+        if reason == "Mobile HDR provenance requires review":
+            return self.t("This HDR photo has a provenance record. Its metadata was kept.",
+                          "Dieses HDR-Foto enthält einen Herkunftsnachweis. Seine Angaben bleiben erhalten.")
+        if reason and any(term in reason for term in ("gain-map", "gain map", "MP index", "HDR index",
+                                                      "HDR descriptors", "HDR export")):
+            return self.t("The HDR layout could not be verified. Existing entries were kept.",
+                          "Der HDR-Aufbau ließ sich nicht sicher prüfen. Vorhandene Einträge bleiben erhalten.")
         return self.t(*REASONS.get(reason, ("Open details to see why the file was kept",
                                              "Der Grund steht im vollständigen Bericht per Doppelklick")))
 

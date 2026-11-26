@@ -1,7 +1,8 @@
 """Strict JPEG traversal and validation of the supported two-image MP index."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import re
 import struct
+from xml.etree import ElementTree
 
 
 @dataclass(frozen=True)
@@ -17,6 +18,7 @@ class Codestream:
     start: int
     end: int
     parts: list[Segment]
+    fixed_layout: bool = False
 
 
 def _codestream(data, offset):
@@ -74,6 +76,38 @@ _entropy_markers = re.compile(rb"\xff+([^\xff])")
 
 MPF = b"MPF\0"
 ISO_GAIN_MAP = b"urn:iso:std:iso:ts:21496:-1\0"
+XMP_PACKET = b"http://ns.adobe.com/xap/1.0/\0"
+
+
+def _mobile_gain_map(data, auxiliary):
+    packets = [p for p in auxiliary.parts if p.marker == 0xe1 and data.startswith(XMP_PACKET, p.payload, p.end)]
+    if len(packets) != 1:
+        return False
+    part = packets[0]
+    packet = data[part.payload + len(XMP_PACKET):part.end]
+    if b"<!DOCTYPE" in packet or b"\0" in packet:
+        return False
+    try:
+        root = ElementTree.fromstring(packet)
+    except ElementTree.ParseError:
+        return False
+    version = "{http://ns.adobe.com/hdr-gain-map/1.0/}Version"
+    apple_type = "{http://ns.apple.com/pixeldatainfo/1.0/}AuxiliaryImageType"
+    apple_version = "{http://ns.apple.com/HDRGainMap/1.0/}HDRGainMapVersion"
+    from .xmp import RDF, XMP_META, locations
+    locations(packet, ())  # Also rejects embedded XMP provenance references.
+    rdf = root if root.tag == f"{{{RDF}}}RDF" else root.find(f"{{{RDF}}}RDF")
+    if rdf is None or (root is not rdf and root.tag != f"{{{XMP_META}}}xmpmeta"):
+        return False
+    for desc in rdf.findall(f"{{{RDF}}}Description"):
+        if desc.get(f"{{{RDF}}}about"):
+            continue
+        if desc.get(version, desc.findtext(version)) == "1.0":
+            return True
+        if (desc.findtext(apple_type) == "urn:com:apple:photo:2020:aux:hdrgainmap"
+                and desc.findtext(apple_version) == "131072"):
+            return True
+    return False
 
 
 def segments(data: bytes) -> list[Segment]:
@@ -103,6 +137,16 @@ def _verify_index(data, part, primary, auxiliary, allow_provenance=False):
         raise ValueError("Unsupported MP index directory")
     first = struct.unpack_from(order + "IIIHH", tiff, 50)
     second = struct.unpack_from(order + "IIIHH", tiff, 66)
+    if first[0] == 0x030000 and second[0] == 0:
+        # Some phone encoders leave a stale primary size. Locate both streams by
+        # parsing SOI through EOI, then independently verify the secondary index.
+        # This layout is editable only at fixed offsets, with the exact MPF retained.
+        first_scan = next(p.start for p in primary.parts if p.marker == 0)
+        if (not first_scan < first[1] <= len(data) or first[2:] != (0, 0, 0)
+                or second[1:] != (auxiliary.end - auxiliary.start, auxiliary.start - origin, 0, 0)
+                or not _mobile_gain_map(data, auxiliary)):
+            raise ValueError("Unverified mobile HDR index or gain-map description")
+        return True
     primary_sizes = {primary.end}
     if allow_provenance:
         # Some signed Adobe exports inserted leading APP11 bytes after writing the MP index.
@@ -115,6 +159,7 @@ def _verify_index(data, part, primary, auxiliary, allow_provenance=False):
     if (first[1] not in primary_sizes or first != (0x20030000, first[1], 0, 0, 0)
             or second != (0x50000, auxiliary.end - auxiliary.start, auxiliary.start - origin, 0, 0)):
         raise ValueError("MP index does not match the JPEG stream boundaries or gain-map image type")
+    return False
 
 
 def image_streams(data, *, allow_provenance=False):
@@ -133,7 +178,12 @@ def image_streams(data, *, allow_provenance=False):
         raise ValueError("Possible signed provenance in gain map. Review the original")
     if auxiliary.end != len(data) or _matching(data, auxiliary, MPF):
         raise ValueError("Unexpected additional data in gain-map container")
-    _verify_index(data, indexes[0], primary, auxiliary, allow_provenance)
+    if _verify_index(data, indexes[0], primary, auxiliary, allow_provenance):
+        if any(p.marker == 0xeb for p in primary.parts):
+            raise ValueError("Mobile HDR provenance requires review")
+        if any(_matching(data, image, ISO_GAIN_MAP) for image in (primary, auxiliary)):
+            raise ValueError("Mixed HDR descriptors require review")
+        return [replace(primary, fixed_layout=True), auxiliary]
     for image in (primary, auxiliary):
         descriptors = _matching(data, image, ISO_GAIN_MAP)
         if len(descriptors) != 1:

@@ -478,3 +478,13 @@ def test_localized_copy_reason_and_full_cell_tooltip(window):
         item = window.table.item(window.table.rowCount()-1, 7)
         assert item.text().startswith(phrase) and item.toolTip() == item.text()
         assert " / " not in item.text()
+
+
+@pytest.mark.parametrize("de", [True, False])
+def test_hdr_and_iptc_skip_reasons_in_selected_language(window, de):
+    from photometaclean.core.edit import IPTC_DIGEST_WARNING
+    window.de = de
+    hdr = window.copy_reason("Unverified mobile HDR index or gain-map description")
+    iptc = window.copy_reason("Metadatenprüfung offen / Metadata warning: " + IPTC_DIGEST_WARNING)
+    assert ("HDR-Aufbau" if de else "HDR layout") in hdr
+    assert ("im Original" if de else "original") in iptc

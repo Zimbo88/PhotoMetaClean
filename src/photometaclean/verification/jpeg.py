@@ -38,7 +38,9 @@ def _image_fingerprint(data, stream, normalize_index=False):
 
 def fingerprint(data, *, allow_provenance=False, normalize_index=False):
     primary, *others = image_streams(data, allow_provenance=allow_provenance)
-    result = _image_fingerprint(data, primary, normalize_index)
+    result = _image_fingerprint(data, primary, normalize_index and not primary.fixed_layout)
+    if primary.fixed_layout:
+        result["primary_bytes"] = primary.end
     for auxiliary in others:
         result["gain_map"] = _image_fingerprint(data, auxiliary)
         result["gain_map"]["stream_sha256"] = hashlib.sha256(memoryview(data)[auxiliary.start:]).hexdigest()

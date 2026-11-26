@@ -121,6 +121,8 @@ def patch_folder(args, stream):
                 omitted += int(bool(result.get("omitted")))
                 event.update(reason=result["reason"], destination=result.get("destination"),
                              status="corrected" if "audit" in result else "copied" if full else "omitted")
+                if check := result.get("postcheck"):
+                    event.update(readback=check["state"], verification_issue=check["issue"])
             except (OSError, RuntimeError, ValueError) as exc:
                 event["error"] = str(exc)
                 errors += 1

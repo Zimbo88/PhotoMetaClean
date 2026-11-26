@@ -11,10 +11,11 @@ from photometaclean.formats.raster import PARSERS, inspect_raster
 from photometaclean.formats.limits import MAX_BYTES
 from photometaclean.formats.recipes import PNG_FIELDS
 from photometaclean.formats.share import EXPORT, ai_indicators, jpeg_changes, recovery_data, recovered_digest
-from photometaclean.formats.xmp import FIELDS, PRIVACY_FIELDS, FieldReviewRequired, locations
+from photometaclean.formats.xmp import FIELDS, PRIVACY_FIELDS, SOURCE_TYPE, FieldReviewRequired, locations
 from photometaclean.verification.jpeg import fingerprint
 
 XMP = b"http://ns.adobe.com/xap/1.0/\0"
+IPTC_DIGEST_WARNING = "IPTCDigest is not current. XMP may be out of sync"
 ALLOWED_APP = {
     0xe0: (b"JFIF\0",),
     0xe1: (b"Exif\0\0", XMP),
@@ -28,6 +29,20 @@ def _check_sidecars(path):
     names = {path.with_suffix(".c2pa").name.casefold(), (path.name + ".c2pa").casefold()}
     if any(entry.name.casefold() in names for entry in path.parent.iterdir()):
         raise ValueError("External manifest present. Review and re-export from the original")
+
+
+def _only_primary_source_label(data, changeset):
+    if len(changeset) != 1:
+        return False
+    start, end, replacement, label = changeset[0]
+    if label != "XMP · DigitalSourceType" or data[start-len(XMP):start] != XMP:
+        return False
+    packet = data[start:end]
+    spans = locations(packet, {SOURCE_TYPE})
+    if len(spans) != 1:
+        return False
+    _, a, b, _ = spans[0]
+    return replacement == packet[:a] + b" " * (b-a) + packet[b:]
 
 
 def _jpeg_edits(data, changes):
@@ -101,11 +116,12 @@ def _prepare(path, changes, evidence):
         if not clean_ai and not history:
             raise ValueError("No verified, supported AI records in this image")
         clean_exif = any(s["field"].split(":")[0] in {"ExifIFD", "IFD0"} for s in analysis.get("editing_signals", ()))
-        if not clean_ai and (analysis.get("manifest") or any(analysis.get("provenance_references", {}).values())):
+        has_provenance = bool(analysis.get("manifest") or any(analysis.get("provenance_references", {}).values()))
+        if not clean_ai and has_provenance:
             raise ValueError("Existing provenance protects this history / Herkunftsnachweis schützt diesen Verlauf")
         clean_exif = (clean_ai and clean_exif) or (history and "IFD0:Software" in history_fields(analysis["metadata"]))
         changeset = jpeg_changes(data, set(changes)-{EXPORT, HISTORY}, clean_exif=clean_exif,
-                                 history=history, clean_ai=clean_ai)
+                                 history=history, clean_ai=clean_ai, has_provenance=has_provenance)
         if not changeset:
             raise ValueError("The detected record has no supported lossless export")
         patches = [(s, e, v) for s, e, v, _ in changeset]
@@ -117,6 +133,11 @@ def _prepare(path, changes, evidence):
                      changes=[dict(field=HISTORY if history else EXPORT, before=label, after=None, offset=s, length=e-s)
                               for s, e, _, label in changeset],
                      recovery=recovery_data(data, changeset))
+        # DigitalSourceType exists only in XMP. A same-length edit to that
+        # property cannot change the legacy IPTC block or its stored digest.
+        if (not has_provenance and analysis.get("warnings") == IPTC_DIGEST_WARNING
+                and _only_primary_source_label(data, changeset)):
+            audit["existing_warning"] = IPTC_DIGEST_WARNING
         return data, patches, audit
     if HISTORY in changes:
         from photometaclean.core.batch import analyze_one
@@ -221,7 +242,7 @@ def apply(path: Path, destination: Path, changes: dict, evidence: str = "", *, r
         if sharing:
             from photometaclean.core.batch import analyze_one
             clean = analyze_one(temp)
-            if clean.get("warnings"):
+            if clean.get("warnings") and clean["warnings"] != audit.get("existing_warning"):
                 raise ValueError("Metadatenprüfung offen / Metadata warning: " + str(clean["warnings"]))
             if (clean.get("sha256") != output_digest or clean.get("validation_error") or clean.get("manifest")
                     or any(clean.get("provenance_references", {}).values())

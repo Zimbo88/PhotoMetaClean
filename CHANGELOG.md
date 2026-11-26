@@ -1,5 +1,11 @@
 # Changelog / Änderungsprotokoll
 
+## 0.9.1 · 2026-11-26
+
+- Die JPEG-Bereinigung unterstützt zusätzlich getestete Android- und Apple-Gain-Maps. Bei diesen Dateien bleiben Bildpositionen, Mehrbildindex und Helligkeitsbild bytegenau erhalten. Die Ergebnisliste erklärt, wenn sich der Aufbau nicht sicher prüfen lässt.
+- Eine bereits vorhandene Warnung zu alten IPTC-Daten darf bei der gezielten Korrektur einer einzelnen, unsignierten XMP-Quellenangabe bestehen bleiben. Die App zeigt die Warnung auch nach der Korrektur an.
+- The JPEG export now supports tested Android and Apple gain-map layouts. An existing IPTC digest warning can remain visible after a verified edit of a single unsigned XMP source label. The results explain unsupported HDR layouts and outstanding metadata warnings.
+
 ## 0.9.0 · 2026-11-26
 
 - Der Sorglos-Modus erstellt einen vollständigen Kundenordner mit geprüften Korrekturen, unveränderten Dateien und der ursprünglichen Ordnerstruktur. Private Protokolle haben einen eigenen Ordner. Nach einem Abbruch bleibt der unvollständige Stand dort zur Prüfung.

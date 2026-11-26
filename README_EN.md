@@ -2,48 +2,32 @@
 
 [Deutsch](README.md) · **English**
 
-PhotoMetaClean shows which edits a picture records. **Clean copies** removes recognized AI metadata from supported JPEGs, including ordinary JPEGs and tested HDR JPEGs with a gain map. It reads the saved copy and compares the image data with the original.
+A night photograph is still a photograph when AI helped reduce the noise. A client who sees an “AI” label under the picture may reasonably wonder whether the whole scene was generated. I’m sharing PhotoMetaClean to help photographers I know explain that distinction to their clients.
 
-## Getting started
+PhotoMetaClean shows what an image file records about its origin and editing history. You can inspect known AI entries and remove supported records from a copy. The app runs on your computer without an account or a photo upload. It’s free for Windows, macOS and Linux. [Download the app](https://github.com/Zimbo88/PhotoMetaClean/releases/latest) · [Startup guide](docs/START.md#english)
 
-1. Download the package for your computer, extract it and open **PhotoMetaClean**. [Downloads](https://github.com/Zimbo88/PhotoMetaClean/releases) · [Startup guide](docs/START.md#english)
-2. Drag a photo folder into the window and click **Clean copies**.
-3. Choose **Show copies** to open the complete **Patch** folder. It retains your subfolders, sidecar files and empty folders.
+## Prepare a folder for a client
 
-**When delivering photos to clients**, you can select **Also remove editing history from copies**. This removes supported Lightroom adjustments, retouch records and editor names. The option starts off. The app verifies that the exported picture retains its pixels. [What the option covers](docs/editing-history.md#english)
+1. Drag your photo folder into the window. **Complete customer folder** is selected by default.
+2. Review the options under **Remove from copies** and click **Clean copies**.
+3. Choose **Show copies**. The **Patch** folder contains the checked copies alongside all unchanged files in their original folder structure. The **Result** column tells you what was removed or why a picture was kept as it was.
 
-JPEG export can detach an embedded signed record from the copy. The original and private journal preserve the previous metadata. Use this export only with the necessary rights. Adobe prohibits removing Content Credentials under its generative AI terms. [JPEG export details](docs/jpeg-export.md#jpeg-copies-with-and-without-hdr) · [Adobe terms](https://www.adobe.com/legal/licenses-terms/adobe-gen-ai-user-guidelines.html)
+Your originals stay in place. Private reports go in a separate folder called **Patch-Protokolle**. Choose **Only changed files** for a smaller test export. To remove supported Lightroom settings or recorded retouching steps, select **Also remove editing history from copies**. The edits you can see remain part of the picture. [Supported editing records](docs/editing-history.md#english)
 
-**Complete customer folder** is selected by default. If 42 of your 100 files are corrected, **Patch** contains all 100 files, including 58 byte-for-byte copies. The originals stay in place. Review any files marked **For review** before delivering them. The private reports go into a separate **Patch-Protokolle** folder. A second run creates **Patch-2**.
+## Which records can the app remove?
 
-For a platform test, select **Only changed files**. If no files were changed, the output folder is empty. Location, serial numbers and comments are kept by default. Open **More tools and picture details** to inspect photos or compare exports.
+Examples include AI source labels in JPEGs and generator settings in PNGs. An entry may describe how a whole image was created or how one part of it was edited. Your original capture and your knowledge of the edit can help you decide whether a particular label is accurate. [How the app recognizes records](docs/marker.md#how-does-photometaclean-recognize-ai-indicators)
 
-## Still seeing an AI label?
+HDR support depends on the file layout. For supported JPEGs, the app checks the compressed image data, decoded pixels and colour profile. For supported HDR JPEGs it also checks the embedded brightness image, called a **gain map**. An unfamiliar layout, extra video data or an inconclusive check can leave an entry in place. In complete-folder mode the app then delivers a byte-for-byte copy. RAW files can be inspected and copied unchanged. [JPEG and HDR details](docs/jpeg-export.md#jpeg-copies-with-and-without-hdr)
 
-Select the picture and click **Report an AI label**. Review the short report, copy it and paste it into the project forum. Include the platform and the wording of the label. Feedback and contributions are welcome. You may modify PhotoMetaClean and share your version free of charge under its license. [Recognition rules](docs/marker.md#how-does-photometaclean-recognize-ai-indicators) · [Forum](https://github.com/Zimbo88/PhotoMetaClean/discussions) · [Contributing](CONTRIBUTING.md)
+## What about signed provenance?
 
-## Why I’m sharing PhotoMetaClean
+On supported files the JPEG export can also remove a signed record from the copy. That copy then loses its embedded proof of provenance. To keep it, turn off **AI records and credentials in JPEGs**. Before sharing a photo, check the applicable rights, disclosure requirements and terms of use. Adobe’s terms for its generative AI features prohibit removing, altering or disabling Content Credentials. [Adobe guidelines, section 6](https://www.adobe.com/legal/licenses-terms/adobe-gen-ai-user-guidelines.html) · [Photography and usage rights](docs/nutzung.md#english)
 
-Anyone who takes photographs at night knows how much a little noise reduction can help. When an “AI” label appears under that photograph, a client or picture editor may think the whole scene was invented on a computer. That misunderstanding can cost a photographer trust and paid work. For someone who earns a living from photography, it can put their livelihood at risk.
+## If a platform still shows an AI label
 
-I know photographers who could use some help sorting this out. That’s why I’m sharing PhotoMetaClean. I want them, and anyone facing the same question, to be able to look at their own photograph, see what was recorded and correct a label they know is wrong.
+PhotoMetaClean recognizes the entries known to this project. Watermarks embedded in the pixels are outside the scope of this check. Platforms disclose only part of how they identify AI use. A label can still appear after a successful file check. Use **Report an AI label** to preview a short technical report, copy it and share it in the project forum. Include the platform and the exact wording of the label. Keep the picture and full private logs on your computer. [Project forum](https://github.com/Zimbo88/PhotoMetaClean/discussions) · [Platform research](research/14_PLATTFORMKENNZEICHNUNG.md)
 
-Adobe and social platforms keep changing their methods. I don’t know how long I’ll be able to investigate new labels and keep the app up to date. I can’t promise it will recognize future AI watermarks. Please check the results for yourself. The [project license](LICENSE) sets out the warranty terms.
+## Use and contributions
 
-Clients rarely see the work that went into the exposure, the lighting and the final edit. A broad AI label can obscure that work. A photographer who reduced noise in a night shot or retouched a reflection in a pair of glasses should be able to explain what changed in their own photograph.
-
-## Understanding AI labels
-
-Denoising can save a night photograph. Generative fill can add detail that was hidden behind a reflection. Both can start with a camera exposure. The Adobe sample exports included signed records of objects removed using Firefly. Correction of an incorrect source label was tested using a deliberately mislabeled comparison file.
-
-PhotoMetaClean recognizes only the AI indicators known to the project for which detection has been implemented. Social networks describe some of their methods publicly. The exact signals they check and the weight they give each one are not fully documented. A platform may still show an AI label after upload. Check your copies before sharing. [Adobe test results](research/15_ADOBE_BEARBEITUNGSSIGNALE.md) · [Platform evidence](research/14_PLATTFORMKENNZEICHNUNG.md)
-
-## Does it work with HDR photos?
-
-Yes, for supported HDR JPEGs. These files include a second image called a gain map that stores brightness information. When correcting a file, the app checks that the main image, gain map and color profiles are preserved. It copies unfamiliar HDR layouts unchanged. [Verified HDR formats](docs/edit.md)
-
-## License
-
-Free for personal and professional photo work. You may sell your photos. Selling the software is prohibited. © 2026 Mathias Zimmermann. [License and warranty](LICENSE) · [Privacy](PRIVACY.md)
-
-[Supported edits and image quality](docs/edit.md) · [Research summary](research/00_PROJEKTSTATUS.md) · [Command line, builds and tests](docs/build.md)
+You may use PhotoMetaClean privately and for paid photography work, and you may sell your photographs. You can modify the software and share it free of charge under the project license. Selling the software is prohibited. © 2026 Mathias Zimmermann. [License and warranty](LICENSE) · [Contributing](CONTRIBUTING.md) · [Privacy](PRIVACY.md)
