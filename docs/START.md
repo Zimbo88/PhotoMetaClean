@@ -1,4 +1,4 @@
-# PhotoMetaClean 0.9.1
+# PhotoMetaClean 0.9.2
 
 ## Deutsch
 
@@ -14,6 +14,8 @@ Lade das passende Paket unter **Releases** herunter. Die Anwendung selbst brauch
 
 Ziehe einen Ordner ins Fenster. **Kopien bereinigen** entfernt unterstützte KI-Metadaten aus JPEG-Kopien, auch bei geprüften HDR-Aufnahmen. Lies den Hinweis zum Herkunftsnachweis vor dem Export. **Sorglos · kompletter Kundenordner** ist voreingestellt und übernimmt auch unveränderte Dateien. **Kopien anzeigen** öffnet den fertigen Ordner **Patch**. **Private Protokolle öffnen** zeigt die Prüfberichte im separaten Ordner **Patch-Protokolle**. Mit **Ausgabeort wählen** kannst du beide Ordner auf einem anderen Laufwerk anlegen. Bei einem Abbruch oder Kopierfehler liegen die bisherigen Ergebnisse im Protokollordner unter **Unvollstaendig**. Für einen Test mit ausschließlich korrigierten Kopien wähle **Nur geänderte Dateien**. Ein Doppelklick auf ein Bild in der Liste zeigt seine Herkunftsangaben.
 
+Ist **Patch** bereits belegt, bekommt die neue Ausgabe einen eigenen Namen, etwa **Patch-2**. Vor einem vollständigen Export prüft die App, ob auf dem gewählten Laufwerk Platz für die Quelldateien ist. Meldet sie Platzmangel, kannst du über **Ausgabeort wählen** ein anderes Laufwerk auswählen.
+
 Für eine Kundenkopie ohne gespeicherte Arbeitsschritte setze vor dem Start das Häkchen **Auch den Bearbeitungsverlauf aus Kopien entfernen**. Die App merkt sich deine Auswahl. Ein Doppelklick auf ein Ergebnis zeigt die Details. [Welche Angaben werden entfernt?](editing-history.md)
 
 Bleibt eine KI-Kennzeichnung nach dem Upload sichtbar, wähle das Bild und klicke auf **KI-Hinweis melden**. Den Kurzbericht kannst du kopieren und im öffentlichen Projektforum einfügen. [Erkennung und Forum](marker.md)
@@ -27,6 +29,8 @@ Choose a package from **Releases**. The app itself works offline without an acco
 Use the Windows-x86_64 ZIP for 64-bit Intel or AMD PCs. Extract the entire archive and double-click **PhotoMetaClean.exe**. On a Mac, choose Darwin-x86_64 for Intel or Darwin-arm64 for Apple silicon. Extract it in Finder and open **PhotoMetaClean.app**. On Ubuntu or Debian x86_64, extract the Linux tar.gz in the file manager and double-click **PhotoMetaClean**, or enable execution in the AppImage’s file properties and open it.
 
 Drag a folder into the window. Click **Clean copies** to remove recognized AI metadata from supported SDR and HDR JPEGs. Read the information about provenance before exporting. The default **Complete customer folder** also includes unchanged files. **Show copies** opens the finished **Patch** folder. **Open private logs** opens the separate **Patch-Protokolle** folder. Use **Choose output** to place both folders on another drive. If you cancel or a copy fails, partial results stay under **Unvollstaendig** in the logs folder. Select **Only changed files** to save corrections alone. Double-click an image row to see its source information.
+
+If **Patch** already exists, the new folder gets its own name, such as **Patch-2**. Before a complete export, the app checks that the drive has room for the source files. If space is low, use **Choose output** to select another drive.
 
 To leave recorded editing steps out of a delivery copy, select **Also remove editing history from copies** before starting. The app remembers your selection. [Supported records](editing-history.md#english)
 

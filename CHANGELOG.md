@@ -1,5 +1,12 @@
 # Changelog / Änderungsprotokoll
 
+## 0.9.2 · 2026-11-26
+
+- Vor einem vollständigen Kundenexport prüft die App den freien Speicherplatz. Geht der Platz während des Kopierens aus oder kann die Oberfläche ein Ergebnis nicht speichern, endet der Export kontrolliert. Bereits kopierte Dateien findest du im privaten Protokollordner.
+- Kopien, Einzelkorrekturen und Berichte prüfen verknüpfte Zielordner jetzt einheitlich. Das Stammverzeichnis des Systemlaufwerks ist als Quelle für den Ordnerexport gesperrt. Windows-Sondernamen werden als Ausgabeziel abgewiesen.
+- A complete export checks the free space before copying photos. If the drive fills up or the app cannot save a result, the export stops and keeps partial copies in the private logs folder.
+- Copies, individual edits and reports now use the same checks for linked output folders. A folder export rejects the system drive root as its source. Reserved Windows names are rejected as output paths.
+
 ## 0.9.1 · 2026-11-26
 
 - Die JPEG-Bereinigung unterstützt zusätzlich getestete Android- und Apple-Gain-Maps. Bei diesen Dateien bleiben Bildpositionen, Mehrbildindex und Helligkeitsbild bytegenau erhalten. Die Ergebnisliste erklärt, wenn sich der Aufbau nicht sicher prüfen lässt.
