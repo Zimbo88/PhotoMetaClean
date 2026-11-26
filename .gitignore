@@ -1,0 +1,54 @@
+/AI KI VERSUCH/
+/vorm Update/
+/Nach Update/
+/private/
+/research/private*/
+/research/local*/
+/reports/
+/output/
+*.jpg
+*.jpeg
+*.JPG
+*.JPEG
+*.png
+*.webp
+*.tif*
+*.heic
+*.heif
+*.avif
+*.arw
+*.dng
+*.xmp
+*.json
+*.csv
+.venv*/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+*.spec
+
+/research/private/
+/.venv*/
+# Additional local metadata and report formats
+*.[Xx][Mm][Pp]
+*.[Jj][Ss][Oo][Nn]
+*.[Cc][Ss][Vv]
+*.jsonl
+*.tsv
+*.exif
+*.c2pa
+
+# Local image fixtures and exports
+*.[Gg][Ii][Ff]
+*.[Aa][Pp][Nn][Gg]
+*.[Bb][Mm][Pp]
+*.[Jj][Pp]2
+*.[Jj]2[Kk]
+*.[Jj][Xx][Ll]
+*.[Jj][Ff][Ii][Ff]
+*.[Hh][Ii][Ff]
+*.[Ii][Cc][Oo]
+*.[Ss][Vv][Gg]
+!/src/photometaclean/gui/photometaclean.svg

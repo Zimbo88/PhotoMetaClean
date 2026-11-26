@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photometaclean"
+dynamic = ["version"]
+description = "Offline desktop app for photo provenance, AI-edit metadata and verified copies"
+requires-python = ">=3.11"
+license = "LicenseRef-PhotoMetaClean-NoSale-1.0"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+dependencies = ["Pillow>=12.2", "pi-heif-decoder==1.7.0.post4", "c2pa-python==0.39.0"]
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.7,<7"]
+test = ["pytest>=8"]
+build = ["pyinstaller>=6.12"]
+
+[project.scripts]
+photometaclean = "photometaclean.cli.app:main"
+[project.gui-scripts]
+photometaclean-gui = "photometaclean.gui.app:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "photometaclean.__version__"}
+
+[tool.setuptools.package-data]
+"photometaclean.gui" = ["photometaclean.svg"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

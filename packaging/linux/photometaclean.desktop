@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=PhotoMetaClean
+Exec=PhotoMetaClean
+Icon=photometaclean
+Categories=Graphics;Photography;
+Terminal=false

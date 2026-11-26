@@ -1,0 +1,9 @@
+# Signierte Herkunft / Signed provenance
+
+Fünf ältere und zwei neuere Dateien enthalten ein eingebettetes Manifest. Für alle sieben meldete der lokale SDK-Lauf `Valid`, `claimSignature.validated` und `assertion.dataHash.match`. Gleichzeitig meldete die Prüfung des aktiven Manifests jeweils `signingCredential.untrusted`. Die kryptografische Bindung wurde bestätigt. Das Zertifikat war in dieser lokalen Prüfkonfiguration unvertrauenswürdig. Ein erneuter Lauf mit anderen Vertrauensankern kann die Vertrauensbewertung ändern.
+
+The manifests carry opened, drawing and edited actions. Drawing and edited actions reference the IPTC digital source type compositeWithTrainedAlgorithmicMedia. The older group contains five drawing and five edited entries, the newer group sixteen of each across two manifests. These counts describe assertion entries, not independent photographs or verified editing gestures. The remaining 55 JPEGs showed no embedded APP11 JUMBF fragment. Remote credentials and current online revocation status were outside the offline examination.
+
+In allen fünf älteren Manifesten steht im Aktions-Template `templateParameters["com.adobe.appEnforced"] = true`. In beiden neueren aktiven Manifesten liegt stattdessen die eigenständige Assertion `com.adobe.app-enforced` mit leerem Datenobjekt vor. Somit ist eine unterschiedliche Darstellung in den vorliegenden Manifesten belegt. Die signierten Fotos bilden keine kontrollierten Versionspaare. Eine Einführung des Konzepts in 16.0.1 oder eine Wirkung dieses Strukturunterschieds auf eine Plattformkennzeichnung bleibt offen.
+
+All five earlier manifests represent enforcement in the action template. Both later manifests expose a separate enforcement assertion. The signed subjects are unpaired, so the corpus establishes a serialization difference across these samples only.

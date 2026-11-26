@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>PhotoMetaClean</title>
+  <rect x="6" y="6" width="244" height="244" rx="52" fill="#153956"/>
+  <rect x="35" y="46" width="168" height="139" rx="19" fill="#f1f7fb"/>
+  <rect x="46" y="57" width="146" height="117" rx="9" fill="#346a94"/>
+  <circle cx="75" cy="87" r="12" fill="#f1f7fb"/>
+  <path d="m46 150 39-42 30 29 23-22 54 47v12H46z" fill="#80b6dc"/>
+  <g transform="rotate(-44 161 161)">
+    <rect x="103" y="133" width="117" height="56" rx="12" fill="#f1f7fb" stroke="#153956" stroke-width="8"/>
+    <path d="M137 138v46" stroke="#153956" stroke-width="6"/>
+  </g>
+  <path d="m187 127-3 28-23 16 3-28z" fill="#468abd"/>
+  <path d="M89 207h49" fill="none" stroke="#80b6dc" stroke-width="8" stroke-linecap="round"/>
+</svg>

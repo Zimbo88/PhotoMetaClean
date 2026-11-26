@@ -1,0 +1,91 @@
+name: Native tests and packages
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, windows-2022, macos-15-intel, macos-26]
+    runs-on: ${{ matrix.runner }}
+    env:
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl squashfs-tools libegl1 libxcb-cursor0
+      - if: runner.os == 'macOS'
+        run: brew list exiftool || brew install exiftool
+      - if: runner.os == 'Windows'
+        run: choco install exiftool -y
+      - if: runner.os == 'macOS'
+        run: echo "$(brew --prefix openssl@3)/bin" >> "$GITHUB_PATH"
+      - run: python -m pip install ".[gui,test,build]"
+      - run: python scripts/privacy_guard.py
+      - run: exiftool -ver
+      - run: python -m pytest
+      - run: python packaging/build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PhotoMetaClean-${{ matrix.runner }}
+          path: |
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  sign-windows:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.WINDOWS_SIGNING_ENABLED == 'true'
+    needs: native
+    runs-on: windows-2022
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: PhotoMetaClean-windows-2022
+          path: unsigned
+      - shell: pwsh
+        run: Expand-Archive unsigned/PhotoMetaClean-Windows-x86_64.zip -DestinationPath staging
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6
+        with:
+          client-id: ${{ vars.SIGNING_CLIENT_ID }}
+          tenant-id: ${{ vars.SIGNING_TENANT_ID }}
+          subscription-id: ${{ vars.SIGNING_SUBSCRIPTION_ID }}
+      - uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82
+        with:
+          endpoint: ${{ vars.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.SIGNING_PROFILE }}
+          files: |
+            ${{ github.workspace }}\staging\PhotoMetaClean.exe
+            ${{ github.workspace }}\staging\photometaclean-cli.exe
+          exclude-azure-cli-credential: false
+          file-digest: SHA256
+          timestamp-digest: SHA256
+      - shell: pwsh
+        run: |
+          foreach ($name in 'PhotoMetaClean.exe', 'photometaclean-cli.exe') {
+            $signature = Get-AuthenticodeSignature "staging/$name"
+            if ($signature.Status -ne 'Valid' -or !$signature.TimeStamperCertificate) {
+              throw "Signature verification failed for $name"
+            }
+            Write-Host "$name signed by $($signature.SignerCertificate.Subject)"
+          }
+          python -c "import shutil; shutil.make_archive('PhotoMetaClean-Windows-x86_64', 'zip', 'staging')"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PhotoMetaClean-windows-signed
+          path: PhotoMetaClean-Windows-x86_64.zip
+          if-no-files-found: error

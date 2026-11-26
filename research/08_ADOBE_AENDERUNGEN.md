@@ -1,0 +1,11 @@
+# Beobachtete Exportänderungen / Observed export changes
+
+Bei allen fünf zugeordneten Paaren erschien XMP-crs:ReshapeAmount neu, bei vier zusätzlich XMP-crs:Glow. Ein Paar erhielt XMP-aux:LensVignetteInfo. In diesen Paaren entfiel kein von ExifTool ausgegebenes Tag. Unter anderem änderten sich die Softwareangabe, Camera-Raw-Version, XMP-CreatorTool, Dokument- und Instanzkennung, Bearbeitungshistorie und Vorschaubild. Neu vorhandene Reglerfelder belegen ihre Serialisierung, allein jedoch keine tatsächlich angewendete Retusche.
+
+All five matched pairs have different primary pixel hashes. The exports also differ in descriptive fields and embedded image data. The sample contains no matched transition from a manifest-free file to a file carrying a manifest. Neither an Adobe-wide change in signing policy nor an Instagram/Facebook labelling trigger can be inferred from these exports.
+
+## Einordnung des erneuten Exports / Re-export context
+
+Laut Fotograf wurden die Bilder für diesen Vergleich nicht neu bearbeitet. Aus abweichenden Pixelwerten lässt sich daher kein neuer manueller Eingriff ableiten. In **allen sieben** aktiven Manifesten nennen die Zeichen- und Bearbeitungsaktionen den Software-Agenten `Adobe Remove Object`, den Parameter `Healing changed, Uses GenAI` und den IPTC-Typ für generativ bearbeitete Inhalte. Die zwei neueren Manifeste führen außerdem eine eigenständige Assertion `com.adobe.app-enforced`. Die Dateien dokumentieren, was Adobe beim Export über die Vorgeschichte erklärt. Zeitpunkt, Fläche und Motiv einer tatsächlichen Retusche sowie ein konkreter Plattformhinweis lassen sich damit allein nicht rekonstruieren.
+
+The photographer reported no new edits for this comparison. Earlier generative operations can appear in later exports. In a firsthand Lightroom Classic 15.5.1 reproduction, exporting an already edited catalog entry with optional credentials disabled produced an embedded manifest. The same tester reported a different result in 15.4. The local older cohort already includes 15.5.1 and 15.6. A fresh generative edit is a useful positive control for 16.0.1, while the re-export of an existing edit tests a separate condition. [Versuchsprotokoll / reproduction](https://community.adobe.com/questions-675/p-post-15-5-1-content-credentials-may-be-added-automatically-during-export-1639701)

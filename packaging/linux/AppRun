@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+bindir="$(dirname "$0")/usr/bin"
+if [ "${1:-}" = "--cli" ]; then
+    shift
+    exec "$bindir/photometaclean" "$@"
+fi
+exec "$bindir/PhotoMetaClean" "$@"
