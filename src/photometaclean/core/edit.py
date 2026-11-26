@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 
 from photometaclean.core.publish import publish_new
+from photometaclean.core.review import destination_path
 from photometaclean.formats.history import HISTORY, HISTORY_RASTERS, JPEG_EXTENSIONS, history_fields, signed_edit
 from photometaclean.formats.jpeg import ISO_GAIN_MAP, MPF, image_streams, is_supported_photoshop_block
 from photometaclean.formats.raster import PARSERS, inspect_raster
@@ -209,12 +210,7 @@ def plan(path: Path, changes: dict, evidence: str = "") -> dict:
 
 
 def apply(path: Path, destination: Path, changes: dict, evidence: str = "", *, reviewed=None) -> dict:
-    path, destination = Path(path), Path(destination)
-    root = Path(__file__).resolve().parents[3]
-    if any(destination.resolve().is_relative_to(root / name) for name in ("vorm Update", "Nach Update", "AI KI VERSUCH")):
-        raise ValueError("Research directories are read-only")
-    if os.path.lexists(destination):
-        raise FileExistsError(destination)
+    path, destination = Path(path), destination_path(destination)
     data, edited, audit = _prepare(path, changes, evidence)
     if reviewed is not None and any(reviewed.get(k) != audit[k] for k in audit):
         raise ValueError("Quelldatei oder Freigabe geändert / Source or approval changed")

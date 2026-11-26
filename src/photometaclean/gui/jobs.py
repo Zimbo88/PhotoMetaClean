@@ -9,6 +9,7 @@ from PySide6.QtCore import QThread, Signal
 from photometaclean.core.batch import discover, analyze_one, differences, scheduled, large_file
 from photometaclean.core.patch import patch_file
 from photometaclean.core.copy import mirror_directories
+from photometaclean.core.delivery import storage_full
 from photometaclean.core.review import apply_reviewed, review
 
 
@@ -143,5 +144,7 @@ class Batch(QThread):
             row["data"] = future.result()
         except Exception as exc:
             row["error"] = str(exc)
+            if storage_full(exc):
+                self.stop.set()
             row["skipped"] = isinstance(exc, (ValueError, FileExistsError)) and self.task in ("review", "apply")
         self.result.emit(row)

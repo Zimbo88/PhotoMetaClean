@@ -35,6 +35,9 @@ def exercise_patch(app):
         Image.new("RGB", (8, 8)).save(settings_png, pnginfo=pnginfo)
         note = folder / "note.txt"
         note.write_bytes(b"synthetic sidecar")
+        previous = folder / "Patch" / "client.txt"
+        previous.parent.mkdir()
+        previous.write_bytes(b"existing customer file")
         if not win.full_folder.isChecked():
             raise RuntimeError("Complete customer folder must be the default")
         if win.history.isChecked():
@@ -47,11 +50,13 @@ def exercise_patch(app):
         app.exec()
         win.job.wait()
         app.processEvents()
-        output = folder / "Patch"
-        if (set(p.name for p in output.iterdir()) != {picture.name, settings_png.name, note.name}
-                or win.patch_report.parent != folder / "Patch-Protokolle"
+        output = folder / "Patch-2"
+        if (set(p.name for p in output.iterdir()) != {picture.name, settings_png.name, note.name, "Patch"}
+                or win.patch_report.parent != folder / "Patch-2-Protokolle"
                 or len(list(win.patch_report.parent.rglob("*.photometaclean.jsonl"))) != 2
-                or win.counts["corrected"] != 2 or win.counts["unchanged"] != 1
+                or win.counts["corrected"] != 2 or win.counts["unchanged"] != 2
+                or previous.read_bytes() != b"existing customer file"
+                or (output / "Patch" / "client.txt").read_bytes() != previous.read_bytes()
                 or b"parameters" in (output / settings_png.name).read_bytes()
                 or picture.read_bytes() != before or b"trainedAlgorithmicMedia" in (output / picture.name).read_bytes()
                 or b"+0.66" in (output / picture.name).read_bytes()

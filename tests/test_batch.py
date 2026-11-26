@@ -104,3 +104,73 @@ def test_exclusive_publication_without_hardlinks(tmp_path, monkeypatch):
     with pytest.raises(FileExistsError):
         publish_new(temp, target)
     assert target.read_bytes() == b"first"
+
+
+@pytest.mark.parametrize("kind", ["copy", "edit", "report"])
+def test_linked_parent_rejected_for_file_outputs(tmp_path, kind):
+    from PIL import Image
+    from photometaclean.core.copy import copy_exact
+    from photometaclean.core.edit import apply
+    original = tmp_path/"original.jpg"
+    Image.new("RGB", (4, 6)).save(original, comment=b"camera")
+    contents = original.read_bytes()
+    other = tmp_path/"another project"
+    other.mkdir()
+    sentinel = other/"keep.txt"
+    sentinel.write_bytes(b"previous work")
+    link = tmp_path/"shortcut"
+    try:
+        link.symlink_to(other, target_is_directory=True)
+    except OSError:
+        pytest.skip("Directory links unavailable")
+    target = link/"new file.jpg"
+    with pytest.raises(ValueError, match="Linked output"):
+        if kind == "copy":
+            copy_exact(original, target)
+        elif kind == "edit":
+            apply(original, target, {"JPEG:Comment": None})
+        else:
+            with report(target):
+                pass
+    assert list(other.iterdir()) == [sentinel] and sentinel.read_bytes() == b"previous work"
+    assert original.read_bytes() == contents
+
+
+def test_two_simultaneous_copies_never_replace_each_other(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Barrier
+    from photometaclean.core.copy import copy_exact
+    sync = Barrier(2)
+    dest = tmp_path/"output.jpg"
+    sources = [tmp_path/"first.jpg", tmp_path/"second.jpg"]
+    for src in sources:
+        src.write_bytes(src.name.encode())
+    def write(src):
+        sync.wait(timeout=5)
+        try:
+            copy_exact(src, dest)
+        except FileExistsError:
+            return None
+        return src
+    with ThreadPoolExecutor(2) as pool:
+        winners = [p for p in pool.map(write, sources) if p]
+    assert len(winners) == 1 and dest.read_bytes() == winners[0].name.encode()
+    assert all(src.read_bytes() == src.name.encode() for src in sources)
+
+
+def test_windows_regular_paths_and_reserved_output_names():
+    from pathlib import PureWindowsPath
+    from photometaclean.core.review import _reserved_windows_path
+    assert _reserved_windows_path(PureWindowsPath("C:/Photos/CON"))
+    assert _reserved_windows_path(PureWindowsPath("C:/Photos/test."))
+    assert not _reserved_windows_path(PureWindowsPath("C:/Photos/long folder/image.jpg"))
+    assert not _reserved_windows_path(PureWindowsPath("//?/C:/Photos/long folder/image.jpg"))
+    assert not _reserved_windows_path(PureWindowsPath("//?/UNC/server/share/photos/image.jpg"))
+
+
+def test_report_can_use_a_regular_parent_reference(tmp_path):
+    folder = tmp_path/"work"
+    folder.mkdir()
+    with report(folder/".."/"report.jsonl") as stream:
+        stream.write("completed\n")
+    assert (tmp_path/"report.jsonl").read_bytes().splitlines() == [b"completed"]

@@ -488,3 +488,62 @@ def test_hdr_and_iptc_skip_reasons_in_selected_language(window, de):
     iptc = window.copy_reason("Metadatenprüfung offen / Metadata warning: " + IPTC_DIGEST_WARNING)
     assert ("HDR-Aufbau" if de else "HDR layout") in hdr
     assert ("im Original" if de else "original") in iptc
+
+
+@pytest.mark.parametrize("stop_reason", ["cancel", "full"])
+def test_interrupted_delivery_keeps_previous_customer_folder(window, tmp_path, monkeypatch, stop_reason):
+    import errno
+    from threading import Event
+    from photometaclean.gui import jobs
+    source_dir = tmp_path/"photos"
+    previous = source_dir/"Patch"
+    previous.mkdir(parents=True)
+    (previous/"previous.txt").write_bytes(b"previous")
+    for name in ("a.txt", "b.txt", "c.txt"):
+        (source_dir/name).write_bytes(name.encode())
+    started, resume = Event(), Event()
+    real_patch = jobs.patch_file
+    def patch(path, *args, **kwargs):
+        if path.name == "b.txt":
+            started.set()
+            assert resume.wait(10)
+            if stop_reason == "full":
+                raise OSError(errno.ENOSPC, "test volume full")
+        return real_patch(path, *args, **kwargs)
+    monkeypatch.setattr(jobs, "patch_file", patch)
+    window.add([source_dir])
+    window.patch_button.click()
+    try:
+        assert started.wait(10)
+        if stop_reason == "cancel":
+            window.cancel.click()
+    finally:
+        resume.set()
+    finish(window)
+    assert window.job.stop.is_set() and not window.open_button.isEnabled()
+    assert not (source_dir/"Patch-2").exists()
+    assert (window.job.logs.work/"a.txt").read_bytes() == b"a.txt"
+    assert (previous/"previous.txt").read_bytes() == b"previous"
+    for name in ("a.txt", "b.txt", "c.txt"):
+        assert (source_dir/name).read_bytes() == name.encode()
+
+
+def test_full_gui_result_cache_stops_delivery(window, tmp_path, monkeypatch):
+    import errno
+    folder = tmp_path/"photos"
+    folder.mkdir()
+    (folder/"notes.txt").write_bytes(b"original")
+    actual_write = Path.write_text
+    def write(path, *args, **kwargs):
+        if path.parent == Path(window.cache.name):
+            raise OSError(errno.ENOSPC, "result cache full")
+        return actual_write(path, *args, **kwargs)
+    messages = []
+    monkeypatch.setattr(Path, "write_text", write)
+    monkeypatch.setattr(window, "message", messages.append)
+    window.add([folder])
+    window.patch_button.click()
+    finish(window)
+    assert window.job.stop.is_set() and not window.open_button.isEnabled()
+    assert not (folder/"Patch").exists() and (folder/"notes.txt").read_bytes() == b"original"
+    assert any("result cache full" in msg for msg in messages)

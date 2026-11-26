@@ -2,6 +2,7 @@
 import hashlib
 import os
 from pathlib import Path
+import shutil
 import stat
 import tempfile
 
@@ -44,12 +45,22 @@ def copy_exact(source, destination, expected=None):
 
 
 def mirror_directories(source, output, *, exclude=None, stopped=lambda: False):
-    """Also retain empty directories in the approved tree."""
+    """Retain empty folders and check space for one complete copy before writing photos."""
     from .batch import walk_tree
-    for parent, _ in walk_tree(Path(source), True, exclude or output, delivery=True):
+    required_bytes = 0
+    for parent, names in walk_tree(Path(source), True, exclude or output, delivery=True):
         if stopped():
             return
         target = output / parent.relative_to(source)
         if target.resolve() != target:
             raise ValueError("Linked output directory")
         target.mkdir(parents=True, exist_ok=True)
+        for name in names:
+            if stopped():
+                return
+            path = parent / name
+            info = path.lstat()
+            if stat.S_ISREG(info.st_mode):
+                required_bytes += info.st_size
+    if not stopped() and required_bytes > shutil.disk_usage(output).free:
+        raise OSError("Zu wenig Platz für den vollständigen Kundenordner / Not enough space for the complete customer folder")

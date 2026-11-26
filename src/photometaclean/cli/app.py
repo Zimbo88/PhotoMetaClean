@@ -20,16 +20,17 @@ def report(target):
         return
     from photometaclean.core.review import destination_path
     target = destination_path(target)
-    with NamedTemporaryFile(mode="w", encoding="utf8", dir=target.parent, delete=False) as tmp:
-        name = Path(tmp.name)
+    name = None
     try:
-        with name.open("w", encoding="utf8") as stream:
+        with NamedTemporaryFile(mode="w", encoding="utf8", dir=target.parent, delete=False) as stream:
+            name = Path(stream.name)
             yield stream
             stream.flush()
             os.fsync(stream.fileno())
         publish_new(name, target)
     finally:
-        name.unlink(missing_ok=True)
+        if name is not None:
+            name.unlink(missing_ok=True)
 
 
 def write(stream, result):
@@ -89,17 +90,13 @@ def parser():
 
 def patch_folder(args, stream):
     from photometaclean.core.copy import mirror_directories
-    from photometaclean.core.delivery import linked, new_delivery, private_folder
+    from photometaclean.core.delivery import new_delivery, patch_source, storage_full
     from photometaclean.core.patch import patch_file
     from photometaclean.formats.history import HISTORY
     from photometaclean.formats.recipes import RECIPE_FIELDS
     from photometaclean.formats.share import EXPORT
 
-    if linked(args.source) or not args.source.is_dir():
-        raise ValueError("Choose a regular source folder / Regulären Quellordner wählen")
-    source = args.source.resolve()
-    if any(private_folder(p) for p in (source, *source.parents)):
-        raise ValueError("Private Protokolle / Private log directory")
+    source = patch_source(args.source)
     parent = args.output.absolute() if args.output else source
     logs = new_delivery(parent)
     full = not args.only_changed
@@ -126,6 +123,9 @@ def patch_folder(args, stream):
             except (OSError, RuntimeError, ValueError) as exc:
                 event["error"] = str(exc)
                 errors += 1
+                if storage_full(exc):
+                    write(journal, event)
+                    break
             write(journal, event)
     if not errors:
         logs.finish()

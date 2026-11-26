@@ -18,7 +18,7 @@ from photometaclean.metadata.findings import explain
 from photometaclean.metadata.editing import LABELS
 from photometaclean.metadata.generators import has_generator_record
 from photometaclean.formats.recipes import RECIPE_FIELDS
-from photometaclean.core.delivery import new_delivery, private_folder
+from photometaclean.core.delivery import new_delivery, patch_source
 from photometaclean.formats.history import HISTORY
 from photometaclean.formats.share import EXPORT
 from .appearance import VerticalScrollArea, apply_theme, card, heading
@@ -395,17 +395,12 @@ class Window(W.QMainWindow):
             if not choice:
                 return
             folder = Path(choice)
-        if folder.is_symlink():
-            self.message(self.t("Choose a regular source folder.", "Einen regulären Quellordner wählen."))
-            return
-        folder = folder.resolve()
-        parent = self.chosen_output or folder
         try:
-            if any(private_folder(p) for p in (folder, *folder.parents)):
-                raise ValueError(self.t("Choose your photos folder.", "Bitte den Fotoordner wählen."))
+            folder = patch_source(folder)
+            parent = self.chosen_output or folder
             if self.chosen_output is None:
                 try:
-                    destination_path(parent / "Patch" / ".photometaclean-output-check")
+                    destination_path(parent / ".photometaclean-output-check")
                 except ValueError:
                     pictures = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.PicturesLocation)
                     parent = Path(pictures) / "PhotoMetaClean" / folder.name
@@ -839,7 +834,13 @@ class Window(W.QMainWindow):
 
     def add_row(self,rec):
         n = self.table.rowCount()
-        (Path(self.cache.name)/str(n)).write_text(pretty(rec),encoding="utf8")
+        try:
+            (Path(self.cache.name)/str(n)).write_text(pretty(rec),encoding="utf8")
+        except OSError as exc:
+            self.cancel_job()
+            if not self.batch_error:
+                self.batch_failed(str(exc))
+            return
         self.table.insertRow(n)
         d = rec.get("data",{})
         task = rec["task"]

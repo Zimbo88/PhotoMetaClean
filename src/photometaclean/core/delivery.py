@@ -1,9 +1,11 @@
 """Keep customer copies and private records on separate paths, including interrupted runs."""
 from dataclasses import dataclass
 from itertools import count
+import errno
 import os
 from pathlib import Path
 import re
+import stat
 from tempfile import mkdtemp
 
 from .publish import rename_new
@@ -32,7 +34,29 @@ def old_report(path):
 
 
 def linked(path):
-    return path.is_symlink() or getattr(os.path, "isjunction", lambda _: False)(path)
+    if path.is_symlink():
+        return True
+    if os.name == "nt":
+        try:
+            return path.lstat().st_reparse_tag == stat.IO_REPARSE_TAG_MOUNT_POINT
+        except FileNotFoundError:
+            pass
+    return False
+
+
+def storage_full(exc):
+    return isinstance(exc, OSError) and exc.errno in (errno.ENOSPC, getattr(errno, "EDQUOT", -1))
+
+
+def patch_source(folder):
+    folder = Path(folder)
+    if linked(folder) or not folder.is_dir():
+        raise ValueError("Regulären Fotoordner wählen / Choose a regular photo folder")
+    source = folder.resolve()
+    system_root = Path(os.environ.get("SystemRoot") or Path.home()).anchor if os.name == "nt" else "/"
+    if source == Path(system_root) or any(private_folder(p) for p in (source, *source.parents)):
+        raise ValueError("Bitte einen Fotoordner wählen / Please select a photo folder")
+    return source
 
 
 @dataclass(frozen=True)
@@ -70,7 +94,7 @@ def edit_logs(output):
 
 def new_delivery(parent):
     parent = Path(parent).absolute()
-    destination_path(parent / "Patch" / ".photometaclean-output-check")
+    destination_path(parent / ".photometaclean-output-check")
     if parent.resolve() != parent or any(private_folder(p) for p in (parent, *parent.parents)):
         raise ValueError("Choose a regular output folder / Regulären Ausgabeordner wählen")
     parent.mkdir(parents=True, exist_ok=True)

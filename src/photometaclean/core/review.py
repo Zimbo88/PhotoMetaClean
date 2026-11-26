@@ -1,8 +1,9 @@
 """Bind a metadata edit to the exact bytes used for its preview."""
 import json
+import ntpath
 import os
 import tempfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from copy import deepcopy
 
 PROJECT = Path(__file__).resolve().parents[3]
@@ -13,13 +14,36 @@ FIELDS = (
 )
 
 
+def _reserved_windows_path(target):
+    drive = target.drive.casefold()
+    if drive.startswith("\\\\.\\"):
+        return True
+    if drive.startswith("\\\\?\\"):
+        volume = drive[4:]
+        if not (volume.startswith("unc\\") or (len(volume) == 2 and volume[0].isalpha() and volume[1] == ":")):
+            return True
+    reserved = getattr(ntpath, "isreserved", lambda name: PureWindowsPath(name).is_reserved())
+    for part in target.parts[1:]:
+        if part == "..":
+            continue
+        if ":" in part or part.endswith((" ", ".")):
+            return True
+        if reserved(part):
+            return True
+    return False
+
+
 def destination_path(path):
     target = Path(path).absolute()
-    if os.name == "nt" and any(part.endswith((" ", ".")) for part in target.parts):
-        raise ValueError("Windows path components cannot end in a space or dot")
+    if os.name == "nt" and _reserved_windows_path(target):
+        raise ValueError("Reservierter Windows-Pfad / Reserved Windows path")
+    if target.parent.resolve() != Path(os.path.abspath(target.parent)):
+        raise ValueError("Verknüpfter Ausgabeordner / Linked output directory")
+    target = Path(os.path.abspath(target))
+    resolved = target.resolve()
     for root in (PROJECT, Path.cwd()):
         for folder in ("vorm Update", "Nach Update", "AI KI VERSUCH"):
-            if target.resolve().is_relative_to((root / folder).resolve()):
+            if resolved.is_relative_to((root / folder).resolve()):
                 raise ValueError("Geschützter Forschungsordner / Protected research directory")
     if target.exists() or target.is_symlink():
         raise FileExistsError(target)

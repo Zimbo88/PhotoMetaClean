@@ -76,3 +76,63 @@ def test_output_location_inside_existing_client_subfolder(tmp_path, capsys):
     output = Path(result["customer_folder"])
     assert (output / "delivery" / note.name).read_bytes() == note.read_bytes()
     assert list((output / "delivery").iterdir()) == [output / "delivery" / note.name]
+
+
+def test_full_delivery_checks_capacity_before_copying(tmp_path, capsys, monkeypatch):
+    from types import SimpleNamespace
+    source = tmp_path / "photos"
+    source.mkdir()
+    note = source / "notes.txt"
+    note.write_bytes(b"original customer notes")
+    monkeypatch.setattr("photometaclean.core.copy.shutil.disk_usage", lambda _: SimpleNamespace(free=2))
+    assert main(["patch", str(source)]) == 1
+    assert "Zu wenig Platz" in capsys.readouterr().err
+    assert not (source/"Patch").exists()
+    assert not list((source/"Patch-Protokolle"/"Unvollstaendig").rglob("*.txt"))
+    assert note.read_bytes() == b"original customer notes"
+    assert main(["patch", str(source), "--only-changed"]) == 0
+
+
+def test_patch_source_cannot_be_the_system_root(tmp_path):
+    import os
+    from photometaclean.core.delivery import patch_source
+    system = Path(os.environ.get("SystemRoot") or Path.home()).anchor if os.name == "nt" else "/"
+    with pytest.raises(ValueError, match="Fotoordner"):
+        patch_source(Path(system))
+    assert patch_source(tmp_path) == tmp_path.resolve()
+
+
+def test_existing_patch_directory_link_is_treated_as_occupied(tmp_path, capsys):
+    source, other = tmp_path/"in", tmp_path/"other"
+    source.mkdir()
+    other.mkdir()
+    (other/"client.txt").write_bytes(b"existing")
+    try:
+        (source/"Patch").symlink_to(other, target_is_directory=True)
+    except OSError:
+        pytest.skip("Directory links unavailable")
+    (source/"input.txt").write_bytes(b"photo notes")
+    assert main(["patch", str(source)]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert Path(result["customer_folder"]) == source/"Patch-2"
+    assert list(other.iterdir()) == [other/"client.txt"]
+    assert (other/"client.txt").read_bytes() == b"existing"
+    assert (source/"Patch-2"/"input.txt").read_bytes() == b"photo notes"
+
+
+def test_out_of_space_during_copy_stops_cli_batch(tmp_path, monkeypatch, capsys):
+    import errno
+    source = tmp_path/"photos"
+    source.mkdir()
+    for n in ("a", "b", "c"):
+        (source/n).write_bytes(n.encode())
+    visited = []
+    def full(path, *args, **kwargs):
+        visited.append(path.name)
+        raise OSError(errno.ENOSPC, "test volume full")
+    monkeypatch.setattr("photometaclean.core.patch.patch_file", full)
+    assert main(["patch", str(source)]) == 1
+    result = json.loads(capsys.readouterr().out)
+    assert visited == ["a"] and result["errors"] == 1 and result["customer_folder"] is None
+    assert not (source/"Patch").exists()
+    assert all((source/n).read_bytes() == n.encode() for n in ("a", "b", "c"))
