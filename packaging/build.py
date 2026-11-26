@@ -169,10 +169,12 @@ def main():
                                           root_dir=work, base_dir=portable.name)
             os.replace(archive, DIST / Path(archive).name)
         else:
-            archive = work / f"PhotoMetaClean-{system}-{arch}.zip"
             if system == "Darwin":
+                chip = {"x86_64": "Intel", "arm64": "Apple-Silicon"}[arch]
+                archive = work / f"PhotoMetaClean-Mac-{chip}.zip"
                 subprocess.run(["ditto", "-c", "-k", "--sequesterRsrc", stage, archive], check=True)
             else:
+                archive = work / f"PhotoMetaClean-{system}-{arch}.zip"
                 with ZipFile(archive, "w", ZIP_DEFLATED) as bundle:
                     for path in stage.rglob("*"):
                         if path.is_file():

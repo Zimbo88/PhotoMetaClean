@@ -7,10 +7,12 @@ Lade das passende Paket unter **Releases** herunter. Die Anwendung selbst brauch
 | Gerät | Paket | So öffnest du die App |
 |---|---|---|
 | Windows, Intel oder AMD (64 Bit) | PhotoMetaClean-Windows-x86_64.zip | Rechtsklick, „Alle extrahieren“, dann **PhotoMetaClean.exe** doppelklicken. Die Begleitordner werden benötigt. |
-| Mac mit Intel-Prozessor | PhotoMetaClean-Darwin-x86_64.zip | Im Finder entpacken und **PhotoMetaClean.app** öffnen. |
-| Mac mit Apple-Chip (M-Serie) | PhotoMetaClean-Darwin-arm64.zip | Im Finder entpacken und **PhotoMetaClean.app** öffnen. |
+| Mac mit Intel-Prozessor | PhotoMetaClean-Mac-Intel.zip | Im Finder entpacken und **PhotoMetaClean.app** öffnen. |
+| Mac mit Apple-Chip | PhotoMetaClean-Mac-Apple-Silicon.zip | Im Finder entpacken und **PhotoMetaClean.app** öffnen. |
 | Ubuntu oder Debian (x86_64) | PhotoMetaClean-linux-x86_64.tar.gz | Im Dateimanager entpacken und im entpackten Ordner **PhotoMetaClean** doppelklicken. |
 | Linux als einzelne Datei | PhotoMetaClean-linux-x86_64.AppImage | In den Dateieigenschaften die Ausführung erlauben und die Datei öffnen. |
+
+Den Prozessortyp findest du im **Apple-Menü → Über diesen Mac**. Steht dort unter **Prozessor** ein Intel-Modell, wähle **Mac-Intel**. Steht dort **Chip** mit dem Namen eines Apple-Chips, wähle **Mac-Apple-Silicon**. [Mac-Modell erkennen](https://support.apple.com/de-de/116943)
 
 Ziehe einen Ordner ins Fenster. **Kopien bereinigen** entfernt unterstützte KI-Metadaten aus JPEG-Kopien, auch bei geprüften HDR-Aufnahmen. Lies den Hinweis zum Herkunftsnachweis vor dem Export. **Sorglos · kompletter Kundenordner** ist voreingestellt und übernimmt auch unveränderte Dateien. **Kopien anzeigen** öffnet den fertigen Ordner **Patch**. **Private Protokolle öffnen** zeigt die Prüfberichte im separaten Ordner **Patch-Protokolle**. Mit **Ausgabeort wählen** kannst du beide Ordner auf einem anderen Laufwerk anlegen. Bei einem Abbruch oder Kopierfehler liegen die bisherigen Ergebnisse im Protokollordner unter **Unvollstaendig**. Für einen Test mit ausschließlich korrigierten Kopien wähle **Nur geänderte Dateien**. Ein Doppelklick auf ein Bild in der Liste zeigt seine Herkunftsangaben.
 
@@ -26,7 +28,7 @@ Windows kann einen unbekannten Herausgeber melden. Die Windows-Dateien haben kei
 
 Choose a package from **Releases**. The app itself works offline without an account. [Download packages](https://github.com/Zimbo88/PhotoMetaClean/releases)
 
-Use the Windows-x86_64 ZIP for 64-bit Intel or AMD PCs. Extract the entire archive and double-click **PhotoMetaClean.exe**. On a Mac, choose Darwin-x86_64 for Intel or Darwin-arm64 for Apple silicon. Extract it in Finder and open **PhotoMetaClean.app**. On Ubuntu or Debian x86_64, extract the Linux tar.gz in the file manager and double-click **PhotoMetaClean**, or enable execution in the AppImage’s file properties and open it.
+Use the Windows-x86_64 ZIP for 64-bit Intel or AMD PCs. Extract the entire archive and double-click **PhotoMetaClean.exe**. On a Mac, open **Apple menu → About This Mac**. If **Processor** lists Intel, choose **PhotoMetaClean-Mac-Intel.zip**. If **Chip** lists an Apple chip, choose **PhotoMetaClean-Mac-Apple-Silicon.zip**. Extract it in Finder and open **PhotoMetaClean.app**. On Ubuntu or Debian x86_64, extract the Linux tar.gz in the file manager and double-click **PhotoMetaClean**, or enable execution in the AppImage’s file properties and open it.
 
 Drag a folder into the window. Click **Clean copies** to remove recognized AI metadata from supported SDR and HDR JPEGs. Read the information about provenance before exporting. The default **Complete customer folder** also includes unchanged files. **Show copies** opens the finished **Patch** folder. **Open private logs** opens the separate **Patch-Protokolle** folder. Use **Choose output** to place both folders on another drive. If you cancel or a copy fails, partial results stay under **Unvollstaendig** in the logs folder. Select **Only changed files** to save corrections alone. Double-click an image row to see its source information.
 
